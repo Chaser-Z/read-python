@@ -21,15 +21,18 @@ _host, _port, _user, _password, _database = read_db_config()
 
 
 class Article_directory(object):
-    __slots__ = ('title',	'update_status', 'last_update_date', 'last_update_directory', 'article_directory_list', 'article_directory_link_list', 'status')
+    __slots__ = ('title', 'article_id', 'image_link', 'author', 'update_status', 'last_update_date', 'last_update_directory', 'airicle_directory', 'article_directory_link', 'status')
 
     def __init__(self):
         self.title = None
+        self.article_id = None
+        self.image_link = None
+        self.author = None
         self.update_status = None
         self.last_update_date = None
         self.last_update_directory = None
-        self.article_directory_list = None
-        self.article_directory_link_list = None
+        self.airicle_directory = None
+        self.article_directory_link = None
         self.status = None
 
 # 从数据库中获取没有被抓取过的小说链接
@@ -74,20 +77,14 @@ def get_article_directory(html):
     article_directory_list_href_reg = r'<dd>(.*?)</dd>'
     article_directory_list_reg = r'<a href="(.*?)">(.*?)</a>'
 
+    article_id_reg = r'<meta content="http://www.biquge.com.tw/(.*?)/" property="og:url"/'
+
     title_result = re.search(title_reg, article_directory_nav_result)
     last_update_date_result = re.search(last_update_date_reg, article_directory_nav_result)
     last_update_directory_result = re.search(last_update_directory_reg, article_directory_nav_result)
 
     article_directory_list_href_result = re.findall(article_directory_list_href_reg, article_directory_result, re.DOTALL)
-
-    # 状态
-    update_status = update_status_result.group(1)
-    # 小说名字
-    title = title_result.group(1)
-    # 最近更新时间
-    last_update_date = last_update_date_result.group(1)
-    # 最近更新目录
-    last_update_directory = last_update_directory_result.group(2)
+    article_id_result = re.search(article_id_reg, html)
 
     # 小说列表list
     article_directory_list = []
@@ -98,40 +95,59 @@ def get_article_directory(html):
         article_directory_list_result = re.search(article_directory_list_reg, index)
         article_directory_link_list.append(article_directory_list_result.group(1))
         article_directory_list.append(article_directory_list_result.group(2))
-    info = Article_directory()
-    info.title = title
-    info.update_status = update_status
-    info.last_update_directory = last_update_directory
-    info.last_update_date = last_update_date
-    info.article_directory_list = article_directory_list
-    info.article_directory_link_list = article_directory_link_list
-    return info
+
+    infos = []
+
+    for i in range(len(article_directory_list)):
+        # 状态
+        update_status = update_status_result.group(1)
+        # 小说名字
+        title = title_result.group(1)
+        # 最近更新时间
+        last_update_date = last_update_date_result.group(1)
+        # 最近更新目录
+        last_update_directory = last_update_directory_result.group(2)
+        # 文章id
+        article_id = article_id_result.group(1)
+
+        info = Article_directory()
+        info.article_id =  article_id
+        info.title = title
+        info.update_status = update_status
+        info.last_update_directory = last_update_directory
+        info.last_update_date = last_update_date
+        info.airicle_directory = article_directory_list[i]
+        info.article_directory_link = article_directory_link_list[i]
+        infos.append(info)
+        update_article_status()
+
+    return infos
 
 
 # 储存更新信息
-def save_article_update_info_data(info):
+def save_article_detail(infos):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = '''insert into c_article_update_info(title, update_status, last_update_date, last_update_directory) values (%s, %s, %s, %s)'''
-    cursor.execute(sql, [info.title, info.update_status, info.last_update_date, info.last_update_directory])
+    sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, airicle_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
 
+    for info in infos:
+        cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.airicle_directory, info.article_directory_link])
     conn.commit()
     cursor.close()
     conn.close()
     conn.disconnect()
-# 储存章节列表
-def save_article_directory_list_data(info):
+
+# 更新信息
+def update_article_status():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = '''insert into c_article_directory_list(airicle_directory, article_directory_link)  values (%s, %s)'''
-    for i in range(len(info.article_directory_list)):
-        cursor.execute(sql, [info.article_directory_list[i], info.article_directory_link_list[i]])
-
+    sql = 'update c_article_detail set status = 1'
+    cursor.execute(sql)
     conn.commit()
     cursor.close()
     conn.close()
-    conn.disconnect()
+
 
 def dowork():
 
@@ -139,10 +155,8 @@ def dowork():
 
     for link in article_list:
         html = get_html(link)
-        info = get_article_directory(html)
-
-        save_article_directory_list_data(info)
-        save_article_update_info_data(info)
+        infos = get_article_directory(html)
+        save_article_detail(infos)
 
 
 if __name__ == '__main__':

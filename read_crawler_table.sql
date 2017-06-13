@@ -38,7 +38,7 @@ create table c_article_detail
 	last_update_directory varchar (50),	 -- 最后更新章节
 	airicle_directory varchar(50),		 -- 章节名称
 	article_directory_link varchar(50),	 -- 章节链接	
-	content text,						 -- 内容 	
+	content text,						 -- 内容 
 	status int not null default 0,       -- 状态 0: default; 1: processed; 3: crawled
 	primary key(id)						 -- 设置id为主键	
 )ENGINE=MyISAM DEFAULT CHARSET=utf8;

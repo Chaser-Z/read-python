@@ -7,7 +7,8 @@ import re
 from bs4 import BeautifulSoup
 import mysql.connector
 from html.parser import HTMLParser
-
+import random
+import time
 
 base_url = 'http://www.biquge.com.tw'
 
@@ -26,10 +27,9 @@ _host, _port, _user, _password, _database = read_db_config()
 
 
 class Article_content(object):
-    __slots__ = ('title', 'content', 'status')
+    __slots__ = ('content', 'status')
 
     def __init__(self):
-        self.title = None
         self.content = None
         self.status = None
 
@@ -50,7 +50,7 @@ def get_directory_link_list_from_db():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = 'select article_directory_link from c_article_directory_list where status = 0'
+    sql = 'select article_directory_link from c_article_detail where status = 1'
     cursor.execute(sql)
     values = cursor.fetchall()
 
@@ -71,18 +71,14 @@ def process_html(content):
 # 给Article_content 赋值
 def get_article_content(html):
 
-    title_reg = r'<a href="(http://.*?)">(.*?)</a>'
     content_reg = r'<div id="content">(.*?)</div>'
 
-    title_result = re.search(title_reg, html)
     content_result = re.search(content_reg, html, re.DOTALL)
 
-    title = title_result.group(2)
     content = content_result.group(1)
 
 
     info = Article_content()
-    info.title = title
     info.content = process_html(content)
 
     return info
@@ -110,7 +106,9 @@ def dowork():
             content = get_content_html(item)
             info = get_article_content(content)
             print(info.content)
-            save_article_content_data(info)
+            # interval = random.uniform(1, 3)
+            # time.sleep(interval)
+            #save_article_content_data(info)
 
 
 if __name__ == '__main__':
