@@ -118,8 +118,9 @@ def get_article_directory(html):
         info.last_update_date = last_update_date
         info.airicle_directory = article_directory_list[i]
         info.article_directory_link = article_directory_link_list[i]
+        #info.status = 1
         infos.append(info)
-        update_article_status()
+        #update_article_status()
 
     return infos
 
@@ -158,6 +159,11 @@ def dowork():
         infos = get_article_directory(html)
         save_article_detail(infos)
 
+        lens = len(infos)
+        print('共', lens)
+        for i in range(lens):
+            update_article_status()
+            print('第：', i + 1)
 
 if __name__ == '__main__':
     dowork()

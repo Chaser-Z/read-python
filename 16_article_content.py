@@ -77,10 +77,12 @@ def get_article_content(html):
 
     content = content_result.group(1)
 
+    content = content.replace(r'\xa0\xa0\xa0\xa0', '  ')
+    content = content.replace(r'<br/>\n<br/>\r\n', '\n')
 
     info = Article_content()
     info.content = process_html(content)
-
+    print(info.content)
     return info
 
 
@@ -110,7 +112,7 @@ def dowork():
             print('已经下载第',index)
             # interval = random.uniform(1, 3)
             # time.sleep(interval)
-            save_article_content_data(info, item)
+            #save_article_content_data(info, item)
 
 
 if __name__ == '__main__':
