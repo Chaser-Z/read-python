@@ -85,12 +85,12 @@ def get_article_content(html):
 
 
 # 存到数据库中
-def save_article_content_data(info):
+def save_article_content_data(info, link):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = '''insert into c_article_content(title, content) values (%s, %s)'''
-    cursor.execute(sql, [info.title, info.content])
+    sql =  'update c_article_detail set content = %s where article_directory_link = %s'
+    cursor.execute(sql, [info.content, link])
 
     conn.commit()
     cursor.close()
@@ -101,14 +101,16 @@ def save_article_content_data(info):
 
 def dowork():
     article_directory_link_list = get_directory_link_list_from_db()
+    total_num = len(article_directory_link_list)
+    print('需要下载章节数:', total_num)
     if article_directory_link_list:
-        for item in article_directory_link_list:
+        for index,item in enumerate(article_directory_link_list):
             content = get_content_html(item)
             info = get_article_content(content)
-            print(info.content)
+            print('已经下载第',index)
             # interval = random.uniform(1, 3)
             # time.sleep(interval)
-            #save_article_content_data(info)
+            save_article_content_data(info, item)
 
 
 if __name__ == '__main__':
