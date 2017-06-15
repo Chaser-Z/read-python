@@ -112,7 +112,7 @@ def dowork():
             print('已经下载第',index)
             # interval = random.uniform(1, 3)
             # time.sleep(interval)
-            #save_article_content_data(info, item)
+            save_article_content_data(info, item)
 
 
 if __name__ == '__main__':
