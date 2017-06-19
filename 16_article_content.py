@@ -50,7 +50,7 @@ def get_directory_link_list_from_db():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = 'select article_directory_link from c_article_detail where status = 1'
+    sql = 'select article_directory_link from c_article_detail where content is NULL'
     cursor.execute(sql)
     values = cursor.fetchall()
 

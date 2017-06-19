@@ -39,7 +39,7 @@ class Article_directory(object):
 def get_article_line_from_db():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = 'select link from c_article_hot_list where status = 0'
+    sql = 'select link from c_article_hot_list where status = 1'
     cursor.execute(sql)
     values = cursor.fetchall()
     cursor.close()
@@ -133,7 +133,10 @@ def save_article_detail(infos):
     sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, airicle_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
 
     for info in infos:
-        cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.airicle_directory, info.article_directory_link])
+        # 存在这个信息就不储存
+        ishave = check_chapter_id_from_db(info)
+        if ishave == False:
+            cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.airicle_directory, info.article_directory_link])
     conn.commit()
     cursor.close()
     conn.close()
@@ -149,6 +152,18 @@ def update_article_status():
     cursor.close()
     conn.close()
 
+# 查看是否存在这个章节的id
+def check_chapter_id_from_db(info):
+
+    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    cursor = conn.cursor()
+    sql = 'select article_directory_link = %s from c_article_detail where airicle_directory = %s'
+    cursor.execute(sql, [info.article_directory_link, info.airicle_directory])
+    values = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return True if len(values) > 0 else False
 
 def dowork():
 
@@ -158,7 +173,6 @@ def dowork():
         html = get_html(link)
         infos = get_article_directory(html)
         save_article_detail(infos)
-
         lens = len(infos)
         print('共', lens)
         for i in range(lens):

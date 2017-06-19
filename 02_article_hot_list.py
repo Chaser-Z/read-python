@@ -104,13 +104,40 @@ def save_hot_article_list_data(hot_list):
               values (%s, %s, %s, %s, %s, %s)'''
 
     for info in hot_list:
-        cursor.execute(sql, [info.title, info.author, info.link, info.image_link, info.article_id, info.abstract])
-
+        status = check_id_from_db(info)
+        if status == 0:
+            cursor.execute(sql, [info.title, info.author, info.link, info.image_link, info.article_id, info.abstract])
+            update_article_status()
     conn.commit()
     cursor.close()
     conn.close()
     conn.disconnect()
 
+# 检查是否存在这个小说链接
+def check_id_from_db(info):
+    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    cursor = conn.cursor()
+    sql = '''select status from c_article_hot_list where article_id = %s'''
+    cursor.execute(sql, [info.article_id])
+    values = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    status = ''
+    for item in values:
+        status = item[0]
+
+    return status
+
+# 更新信息
+def update_article_status():
+    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    cursor = conn.cursor()
+    sql = 'update c_article_hot_list set status = 1'
+    cursor.execute(sql)
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 def do_work():
     content = get_html(base_url)

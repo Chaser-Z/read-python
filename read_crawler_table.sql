@@ -21,7 +21,7 @@ create table c_article_hot_list
   article_abstract text,			 -- 文章摘要	
   link varchar(500),				 -- 文章链接	
   image_link varchar(500),			 -- 图片链接 
-  status int not null default 0,	 -- 状态	
+  status int not null default 0,	 -- 状态	    0 - 默认  1 - 已经抓取，但是没有完结  2 - 完结，不用继续抓取
   primary key(id)					 -- 设置id为主键
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
