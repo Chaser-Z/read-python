@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import codecs
 import configparser
 import mysql.connector
 
@@ -39,7 +39,7 @@ def check_and_create_database():
 
 def create_tables():
     sql_path = 'read_crawler_table.sql'
-    with open(sql_path, 'r') as sql_file:
+    with codecs.open(sql_path, 'r', 'utf-8') as sql_file:
         sql = sql_file.read()
         sql_file.close()
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
