@@ -93,8 +93,14 @@ def get_article_directory(html):
 
     for index in article_directory_list_href_result:
         article_directory_list_result = re.search(article_directory_list_reg, index)
-        article_directory_link_list.append(article_directory_list_result.group(1))
-        article_directory_list.append(article_directory_list_result.group(2))
+        info = Article_directory()
+        info.article_directory_link = article_directory_list_result.group(1)
+        info.article_directory =  article_directory_list_result.group(2)
+        # 存在这个信息就不储存
+        ishave = check_chapter_id_from_db(info)
+        if ishave == False:
+            article_directory_link_list.append(article_directory_list_result.group(1))
+            article_directory_list.append(article_directory_list_result.group(2))
 
     infos = []
 
@@ -184,10 +190,10 @@ def dowork():
         infos = get_article_directory(html)
         save_article_detail(infos)
         lens = len(infos)
-        print('共', lens)
+        print('共需要抓取章数', lens)
         for i in range(lens):
             update_article_status()
-            print('第：', i + 1)
+            print('已经抓取章节进度：', i + 1)
 
 if __name__ == '__main__':
     dowork()
