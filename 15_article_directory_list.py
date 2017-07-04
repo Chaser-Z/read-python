@@ -21,7 +21,7 @@ _host, _port, _user, _password, _database = read_db_config()
 
 
 class Article_directory(object):
-    __slots__ = ('title', 'article_id', 'image_link', 'author', 'update_status', 'last_update_date', 'last_update_directory', 'airicle_directory', 'article_directory_link', 'status')
+    __slots__ = ('title', 'article_id', 'image_link', 'author', 'update_status', 'last_update_date', 'last_update_directory', 'article_directory', 'article_directory_link', 'status')
 
     def __init__(self):
         self.title = None
@@ -31,7 +31,7 @@ class Article_directory(object):
         self.update_status = None
         self.last_update_date = None
         self.last_update_directory = None
-        self.airicle_directory = None
+        self.article_directory = None
         self.article_directory_link = None
         self.status = None
 
@@ -116,7 +116,7 @@ def get_article_directory(html):
         info.update_status = update_status
         info.last_update_directory = last_update_directory
         info.last_update_date = last_update_date
-        info.airicle_directory = article_directory_list[i]
+        info.article_directory = article_directory_list[i]
         info.article_directory_link = article_directory_link_list[i]
         #info.status = 1
         infos.append(info)
@@ -130,13 +130,13 @@ def save_article_detail(infos):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, airicle_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
+    sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, article_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
 
     for info in infos:
         # 存在这个信息就不储存
         ishave = check_chapter_id_from_db(info)
         if ishave == False:
-            cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.airicle_directory, info.article_directory_link])
+            cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.article_directory, info.article_directory_link])
     conn.commit()
     cursor.close()
     conn.close()
@@ -152,13 +152,23 @@ def update_article_status():
     cursor.close()
     conn.close()
 
+# 更新完结信息
+def update_article_finish_status():
+    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    cursor = conn.cursor()
+    sql = 'update c_article_detail set status = 2'
+    cursor.execute(sql)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 # 查看是否存在这个章节的id
 def check_chapter_id_from_db(info):
 
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = 'select article_directory_link = %s from c_article_detail where airicle_directory = %s'
-    cursor.execute(sql, [info.article_directory_link, info.airicle_directory])
+    sql = 'select article_directory_link = %s from c_article_detail where article_directory = %s'
+    cursor.execute(sql, [info.article_directory_link, info.article_directory])
     values = cursor.fetchall()
     cursor.close()
     conn.close()
