@@ -6,10 +6,21 @@ import mysql.connector
 from bs4 import BeautifulSoup
 import requests
 import re
+import sys
+import os
+
+def current_file_dir():
+    path = sys.path[0]
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
 
 def read_db_config():
+    current = current_file_dir()
     config = configparser.ConfigParser()
-    config.read('db.cnf')
+    config.read(os.path.join(current, 'db.cnf'))
     host = config.get('mysql', 'host')
     port = config.get('mysql', 'port')
     user = config.get('mysql', 'user')

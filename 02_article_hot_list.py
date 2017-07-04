@@ -9,6 +9,8 @@ import re
 import string
 from html.parser import HTMLParser
 import mysql.connector
+import sys
+import os
 
 
 base_url = 'http://www.biquge.com.tw'
@@ -18,9 +20,18 @@ class Hot_article(object):
     __slots__ = ('article_id','title','author','abstract','link','image_link','status')
 
 
+def current_file_dir():
+    path = sys.path[0]
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
+
 def read_db_config():
+    current = current_file_dir()
     config = configparser.ConfigParser()
-    config.read('db.cnf')
+    config.read(os.path.join(current, 'db.cnf'))
     host = config.get('mysql', 'host')
     port = config.get('mysql', 'port')
     user = config.get('mysql', 'user')

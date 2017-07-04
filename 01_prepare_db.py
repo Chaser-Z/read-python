@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+import codecs
 import configparser
 import mysql.connector
+import sys
+import os
+
+
+def current_file_dir():
+    path = sys.path[0]
+    if os.path.isdir(path):
+        return path
+    elif os.path.isfile(path):
+        return os.path.dirname(path)
+
 
 def read_db_config():
+    current = current_file_dir()
     config = configparser.ConfigParser()
-    config.read('db.cnf')
+    config.read(os.path.join(current, 'db.cnf'))
     host = config.get('mysql', 'host')
     port = config.get('mysql', 'port')
     user = config.get('mysql', 'user')
@@ -39,7 +51,7 @@ def check_and_create_database():
 
 def create_tables():
     sql_path = 'read_crawler_table.sql'
-    with open(sql_path, 'r') as sql_file:
+    with codecs.open(sql_path, 'r', 'utf-8') as sql_file:
         sql = sql_file.read()
         sql_file.close()
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
