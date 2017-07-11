@@ -61,7 +61,7 @@ def get_article_line_from_db():
 
 # 获取h5内容
 def get_html(url):
-    r = BeautifulSoup(requests.get(url=url).content, 'html.parser')
+    r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
     content = str(r)
 
     return content

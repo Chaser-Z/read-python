@@ -65,7 +65,7 @@ def get_article_line_from_db():
 
 # 获取h5内容
 def get_html(url):
-    r = BeautifulSoup(requests.get(url=url).content, 'html.parser')
+    r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
     content = str(r)
 
     return content
@@ -144,20 +144,20 @@ def get_article_directory(html):
 
 # 储存更新信息
 def save_article_detail(infos):
-    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
-    cursor = conn.cursor()
-
-    sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, article_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
 
     for info in infos:
         # 存在这个信息就不储存
         ishave = check_chapter_id_from_db(info)
         if ishave == False:
+            conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+            cursor = conn.cursor()
+            sql = '''insert into c_article_detail(title, article_id, update_status, last_update_date, last_update_directory, article_directory, article_directory_link) values (%s, %s, %s, %s, %s, %s, %s)'''
+
             cursor.execute(sql, [info.title, info.article_id, info.update_status, info.last_update_date, info.last_update_directory, info.article_directory, info.article_directory_link])
-    conn.commit()
-    cursor.close()
-    conn.close()
-    conn.disconnect()
+            conn.commit()
+            cursor.close()
+            conn.close()
+            conn.disconnect()
 
 # 更新信息
 def update_article_status():

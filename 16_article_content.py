@@ -49,8 +49,7 @@ class Article_content(object):
 # 获取内容那段h5
 def get_content_html(url):
     url = base_url + url
-    r = BeautifulSoup(requests.get(url=url).content, 'html.parser')
-
+    r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
     content_reg = r'<div class="content_read">(.*?)<div class="footer">'
     content = str(re.findall(content_reg, str(r), re.DOTALL))
 

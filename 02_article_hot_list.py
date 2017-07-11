@@ -43,7 +43,7 @@ _host, _port, _user, _password, _database = read_db_config()
 
 
 def get_html(url):
-    r = BeautifulSoup(requests.get(url=url).content, 'html.parser')
+    r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
     # req = urllib.request.Request(url)
     # with urllib.request.urlopen(req) as page:
     #     html = page.read()
