@@ -50,7 +50,7 @@ class Article_directory(object):
 def get_article_line_from_db():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = 'select link from c_article_hot_list where status = 1'
+    sql = 'select link from c_article_list where status = 1'
     cursor.execute(sql)
     values = cursor.fetchall()
     cursor.close()

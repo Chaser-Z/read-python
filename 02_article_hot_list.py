@@ -111,14 +111,17 @@ def save_hot_article_list_data(hot_list):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = '''insert into c_article_hot_list(title, author, link, image_link, article_id, article_abstract)
-              values (%s, %s, %s, %s, %s, %s)'''
+    sql = '''insert into c_article_list(title, author, link, image_link, article_id, article_abstract, article_type)
+              values (%s, %s, %s, %s, %s, %s, %s)'''
 
     for info in hot_list:
         status = check_id_from_db(info)
-        if status == 0:
-            cursor.execute(sql, [info.title, info.author, info.link, info.image_link, info.article_id, info.abstract])
-            update_article_status()
+        if status :
+            print("存在")
+        else:
+            cursor.execute(sql,
+                           [info.title, info.author, info.link, info.image_link, info.article_id, info.abstract, '热门'])
+            update_article_status(info.article_id)
     conn.commit()
     cursor.close()
     conn.close()
@@ -128,7 +131,7 @@ def save_hot_article_list_data(hot_list):
 def check_id_from_db(info):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = '''select status from c_article_hot_list where article_id = %s'''
+    sql = '''select status from c_article_list where article_id = %s'''
     cursor.execute(sql, [info.article_id])
     values = cursor.fetchall()
     cursor.close()
@@ -141,11 +144,11 @@ def check_id_from_db(info):
     return status
 
 # 更新信息
-def update_article_status():
+def update_article_status(id):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = 'update c_article_hot_list set status = 1'
-    cursor.execute(sql)
+    sql = 'update c_article_list set status = 1 where article_id = %s'
+    cursor.execute(sql, [id])
     conn.commit()
     cursor.close()
     conn.close()
@@ -159,6 +162,6 @@ def do_work():
 
 if __name__=='__main__':
     do_work()
-    print('02_articlt_hot_list.py done')
+    print('02_articlt_list.py done')
 
 
