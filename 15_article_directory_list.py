@@ -8,6 +8,40 @@ import requests
 import re
 import sys
 import os
+import random
+import time
+
+
+mainURL = ''
+
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'
+
+def get_data(filename, default='') -> list:
+    """
+    Get data from a file
+    :param filename: filename
+    :param default: default value
+    :return: data
+    """
+    root_folder = os.path.dirname(os.path.dirname(__file__))
+    user_agents_file = os.path.join(
+        os.path.join(root_folder, 'data'), filename)
+    try:
+        with open(user_agents_file) as fp:
+            data = [_.strip() for _ in fp.readlines()]
+    except:
+        data = [default]
+    return data
+
+def get_random_user_agent() -> str:
+    """
+    Get a random user agent string.
+    :return: Random user agent string.
+    """
+    return random.choice(get_data('user_agents.txt', USER_AGENT))
+
+headers = {'user-agent': get_random_user_agent()}
+
 
 def current_file_dir():
     path = sys.path[0]
@@ -65,10 +99,31 @@ def get_article_line_from_db():
 
 # 获取h5内容
 def get_html(url):
-    r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
-    content = str(r)
 
-    return content
+
+    t = ''
+    print('get_html')
+    print('main =', mainURL)
+    try:
+        print('键入')
+        t = requests.get(url=url, headers=headers, verify=False, allow_redirects=True).content
+
+    except:
+        print("Connection refused by the server..")
+        print("Let me sleep for 5 seconds")
+        print("ZZzzzz...")
+        time.sleep(5)
+        print("Was a nice sleep, now let me continue...")
+        get_html(mainURL)
+
+
+    print('t ======', t)
+    if t:
+        r = BeautifulSoup(t, 'html.parser')
+        content = str(r)
+        return content
+    return None
+
 
 # 获取章节目录
 def get_article_directory(html):
@@ -169,6 +224,7 @@ def update_article_status():
     cursor.close()
     conn.close()
 
+
 # 更新完结信息
 def update_article_finish_status():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
@@ -189,22 +245,25 @@ def check_chapter_id_from_db(info):
     values = cursor.fetchall()
     cursor.close()
     conn.close()
-
     return True if len(values) > 0 else False
-
 def dowork():
 
     article_list = get_article_line_from_db()
 
     for link in article_list:
+        global mainURL
+        mainURL = link
         html = get_html(link)
-        infos = get_article_directory(html)
-        save_article_detail(infos)
-        lens = len(infos)
-        print('共需要抓取章数', lens)
-        for i in range(lens):
-            update_article_status()
-            print('已经抓取章节进度：', i + 1)
+        print('html = ', html)
+        if html:
+            infos = get_article_directory(html)
+            save_article_detail(infos)
+            lens = len(infos)
+            print('共需要抓取章数', lens)
+            for i in range(lens):
+                update_article_status()
+                print('已经抓取章节进度：', i + 1)
+
 
 if __name__ == '__main__':
     dowork()

@@ -14,6 +14,34 @@ import os
 
 base_url = 'http://www.biquge.com.tw'
 
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'
+
+def get_data(filename, default='') -> list:
+    """
+    Get data from a file
+    :param filename: filename
+    :param default: default value
+    :return: data
+    """
+    root_folder = os.path.dirname(os.path.dirname(__file__))
+    user_agents_file = os.path.join(
+        os.path.join(root_folder, 'data'), filename)
+    try:
+        with open(user_agents_file) as fp:
+            data = [_.strip() for _ in fp.readlines()]
+    except:
+        data = [default]
+    return data
+
+def get_random_user_agent() -> str:
+    """
+    Get a random user agent string.
+    :return: Random user agent string.
+    """
+    return random.choice(get_data('user_agents.txt', USER_AGENT))
+
+headers = {'user-agent': get_random_user_agent()}
+
 
 def current_file_dir():
     path = sys.path[0]
@@ -48,6 +76,9 @@ class Article_content(object):
 
 # 获取内容那段h5
 def get_content_html(url):
+    s = requests.session()
+    s.adapters.DEFAULT_RETRIES = 5
+    s.keep_alive = False
     url = base_url + url
     r = BeautifulSoup(requests.get(url=url, verify=False).content, 'html.parser')
     content_reg = r'<div class="content_read">(.*?)<div class="footer">'
