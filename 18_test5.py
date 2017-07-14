@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import configparser
+import threading
+import urllib
+
 import mysql.connector
 from bs4 import BeautifulSoup
 import requests
@@ -10,7 +13,7 @@ import sys
 import os
 import random
 import time
-
+from urllib import request
 
 mainURL = ''
 
@@ -64,7 +67,6 @@ def read_db_config():
 
 _host, _port, _user, _password, _database = read_db_config()
 
-
 class Article_directory(object):
     __slots__ = ('title', 'article_id', 'image_link', 'author', 'update_status', 'last_update_date', 'last_update_directory', 'article_directory', 'article_directory_link', 'status')
 
@@ -98,31 +100,49 @@ def get_article_line_from_db():
 
 
 # 获取h5内容
-def get_html(url):
+def get_html(urls):
 
+    def crawl_and_save(html):
+        print('执行')
+        infos = get_article_directory(html)
+        save_article_detail(infos)
+        lens = len(infos)
+        print('共需要抓取章数', lens)
+        for i in range(lens):
+            update_article_status()
+            print('已经抓取章节进度：', i + 1)
 
-    t = ''
-    print('get_html')
-    print('main =', mainURL)
-    try:
-        print('键入')
-        t = requests.get(url=url, headers=headers, verify=False, allow_redirects=True).content
+    def get(url):
+        try:
+            r = requests.get(url, timeout=120.0, headers=headers, verify=False, allow_redirects=True).content
+        except:
+            pass
+        else:
+            if r:
+                r = BeautifulSoup(r, 'html.parser')
+                content = str(r)
+                if content:
+                    crawl_and_save(content)
 
-    except:
-        print("Connection refused by the server..")
-        print("Let me sleep for 5 seconds")
-        print("ZZzzzz...")
-        time.sleep(5)
-        print("Was a nice sleep, now let me continue...")
-        get_html(mainURL)
+    t1 = time.time()
+    number = 0
+    th = []
+    # 最大的并发数量
+    maxthreads = 5
 
+    for url in urls:
+        number += 1
+        t1 = threading.Thread(target=get, args=(url,))
+        t1.start()
+        th.append(t1)
+        if number > maxthreads:
+            [i.join() for i in th]
+            number = 0
+            th = []
+    [i.join() for i in th]
 
-    print('t ======', t)
-    if t:
-        r = BeautifulSoup(t, 'html.parser')
-        content = str(r)
-        return content
-    return None
+    print(time.time() - t1)
+
 
 
 # 获取章节目录
@@ -246,28 +266,12 @@ def check_chapter_id_from_db(info):
     cursor.close()
     conn.close()
     return True if len(values) > 0 else False
+
 def dowork():
 
     article_list = get_article_line_from_db()
-
-    for link in article_list:
-        global mainURL
-        mainURL = link
-
-
-
-        html = get_html(link)
-        print('html = ', html)
-        if html:
-            infos = get_article_directory(html)
-            save_article_detail(infos)
-            lens = len(infos)
-            print('共需要抓取章数', lens)
-            for i in range(lens):
-                update_article_status()
-                print('已经抓取章节进度：', i + 1)
-
+    get_html(article_list)
 
 if __name__ == '__main__':
     dowork()
-    print('15_article_directory_list done')
+    #print('15_article_directory_list done')

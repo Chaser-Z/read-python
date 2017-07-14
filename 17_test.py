@@ -267,83 +267,6 @@ async def get_html(url):
 
 
 # 获取章节目录
-#async def get_article_directory(html):
-
-
-
-    # update_status_reg = r'<meta content="(.*?)" property="og:novel:status"/>'
-    # article_directory_nav_reg = r'<div class="box_con">(.*?)<div id="sidebar">'
-    # article_directory_reg = r'<div id="list">(.*?)<div id="footer" name="footer">'
-    #
-    # update_status_result = re.search(update_status_reg, html)
-    # article_directory_nav_result = re.findall(article_directory_nav_reg, html, re.DOTALL)[0]
-    # article_directory_result = re.findall(article_directory_reg, html, re.DOTALL)[0]
-    #
-    # title_reg = r'<h1>(.*?)</h1>'
-    # last_update_date_reg = r'<p>最后更新：(.*?)</p>'
-    # last_update_directory_reg = r'<p>最新章节：(.*?)>(.*?)</a></p>'
-    #
-    # article_directory_list_href_reg = r'<dd>(.*?)</dd>'
-    # article_directory_list_reg = r'<a href="(.*?)">(.*?)</a>'
-    #
-    # article_id_reg = r'<meta content="http://www.biquge.com.tw/(.*?)/" property="og:url"/'
-    #
-    # title_result = re.search(title_reg, article_directory_nav_result)
-    # last_update_date_result = re.search(last_update_date_reg, article_directory_nav_result)
-    # last_update_directory_result = re.search(last_update_directory_reg, article_directory_nav_result)
-    #
-    # article_directory_list_href_result = re.findall(article_directory_list_href_reg, article_directory_result, re.DOTALL)
-    # article_id_result = re.search(article_id_reg, html)
-    #
-    # # 小说列表list
-    # article_directory_list = []
-    # # 小说浏览章节h5 list
-    # article_directory_link_list = []
-    #
-    # for index in article_directory_list_href_result:
-    #     article_directory_list_result = re.search(article_directory_list_reg, index)
-    #     info = Article_directory()
-    #     info.article_directory_link = article_directory_list_result.group(1)
-    #     info.article_directory =  article_directory_list_result.group(2)
-    #     # 存在这个信息就不储存
-    #     ishave = check_chapter_id_from_db(info)
-    #     if ishave == False:
-    #         article_directory_link_list.append(article_directory_list_result.group(1))
-    #         article_directory_list.append(article_directory_list_result.group(2))
-    #
-    # infos = []
-    #
-    # for i in range(len(article_directory_list)):
-    #     # 状态
-    #     update_status = update_status_result.group(1)
-    #     # 小说名字
-    #     title = title_result.group(1)
-    #     # 最近更新时间
-    #     last_update_date = last_update_date_result.group(1)
-    #     # 最近更新目录
-    #     last_update_directory = last_update_directory_result.group(2)
-    #     # 文章id
-    #     article_id = article_id_result.group(1)
-    #
-    #     info = Article_directory()
-    #     info.article_id =  article_id
-    #     info.title = title
-    #     info.update_status = update_status
-    #     info.last_update_directory = last_update_directory
-    #     info.last_update_date = last_update_date
-    #     info.article_directory = article_directory_list[i]
-    #     info.article_directory_link = article_directory_link_list[i]
-    #     #info.status = 1
-    #     infos.append(info)
-    #     #update_article_status()
-    #
-    # return infos
-
-
-
-
-
-# 获取章节目录
 async def get_article_directory(result):
     update_status_reg = r'<meta content="(.*?)" property="og:novel:status"/>'
     article_directory_nav_reg = r'<div class="box_con">(.*?)<div id="sidebar">'
@@ -433,7 +356,7 @@ async def save_article_detail(infos):
 
     for info in infos:
         # 存在这个信息就不储存
-        ishave = check_chapter_id_from_db(info)
+        ishave = await check_chapter_id_from_db(info)
         if ishave == False:
             conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
             cursor = conn.cursor()
@@ -461,32 +384,20 @@ async def dowork():
 
     async with aiohttp.ClientSession() as client:
         if article_list:
+            await [fetch(client,link) for link in article_list]
             for link in article_list:
                 html = await fetch(client, link)
-                soup = BeautifulSoup(html, 'html5lib')
-                result = soup.find_all('html')
-                infos = await get_article_directory(str(result))
-                await save_article_detail(infos)
-                lens = len(infos)
-                print('共需要抓取章数', lens)
-                for i in range(lens):
-                    await update_article_status()
-                    print('已经抓取章节进度：', i + 1)
+                if html:
+                    soup = BeautifulSoup(html, 'html5lib')
+                    result = soup.find_all('html')
+                    infos = await get_article_directory(str(result))
+                    await save_article_detail(infos)
+                    lens = len(infos)
+                    print('共需要抓取章数', lens)
+                    for i in range(lens):
+                        await update_article_status()
+                        print('已经抓取章节进度：', i + 1)
 
-
-                # for link in article_list:
-    #     global mainURL
-    #     mainURL = link
-    #     html = await get_html(link)
-        # print('html = ', html)
-        # if html:
-        #     infos = get_article_directory(html)
-        #     save_article_detail(infos)
-        #     lens = len(infos)
-        #     print('共需要抓取章数', lens)
-        #     for i in range(lens):
-        #         update_article_status()
-        #         print('已经抓取章节进度：', i + 1)
 
 
 if __name__ == '__main__':
