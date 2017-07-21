@@ -106,11 +106,7 @@ def get_html(urls):
         print('执行')
         infos = get_article_directory(html)
         save_article_detail(infos)
-        lens = len(infos)
-        print('共需要抓取章数', lens)
-        for i in range(lens):
-            update_article_status()
-            print('已经抓取章节进度：', i + 1)
+
 
     def get(url):
         try:
@@ -188,9 +184,12 @@ def get_article_directory(html):
             article_directory_link_list.append(article_directory_list_result.group(1))
             article_directory_list.append(article_directory_list_result.group(2))
 
+    print('共需要抓取章数', len(article_directory_list))
+
     infos = []
 
     for i in range(len(article_directory_list)):
+
         # 状态
         update_status = update_status_result.group(1)
         # 小说名字
@@ -213,6 +212,8 @@ def get_article_directory(html):
         #info.status = 1
         infos.append(info)
         #update_article_status()
+        update_article_status()
+        print('已经抓取章节进度：', i + 1)
 
     return infos
 

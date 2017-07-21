@@ -11,8 +11,10 @@ import random
 import time
 import sys
 import os
+import threading
 
 base_url = 'http://www.biquge.com.tw'
+global main_index
 
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'
 
@@ -75,20 +77,58 @@ class Article_content(object):
 
 
 # 获取内容那段h5
-def get_content_html(url):
+def get_content_html(urls):
 
-    url = base_url + url
-    content = ''
-    try:
-        r = BeautifulSoup(requests.get(url, timeout=120.0, headers=headers, verify=False, allow_redirects=True).content, 'html.parser')
-    except:
-        pass
-    else:
-        if r:
-            content_reg = r'<div class="content_read">(.*?)<div class="footer">'
-            content = str(re.findall(content_reg, str(r), re.DOTALL))
 
-    return content
+    content = ""
+
+    global main_index
+    main_index = 0
+
+    def get(url):
+        try:
+            r = BeautifulSoup(
+                requests.get(url, timeout=120.0, headers=headers, verify=False, allow_redirects=True).content,
+                'html.parser')
+        except:
+            pass
+        else:
+            if r:
+                content_reg = r'<div class="content_read">(.*?)<div class="footer">'
+                content = str(re.findall(content_reg, str(r), re.DOTALL))
+                if content:
+                    info = get_article_content(content)
+                    url = url[24:]
+                    print(url)
+                    global main_index
+                    main_index = main_index + 1
+                    print('已经下载第', main_index)
+                    print(info.content)
+                    save_article_content_data(info, url)
+                    #return content
+
+    t1 = time.time()
+    number = 0
+    th = []
+    # 最大的并发数量
+    maxthreads = 40
+
+    for url in urls:
+        url = base_url + url
+        number += 1
+        t1 = threading.Thread(target=get, args=(url,))
+        t1.start()
+        th.append(t1)
+        if number > maxthreads:
+            [i.join() for i in th]
+            number = 0
+            th = []
+    [i.join() for i in th]
+
+    print(time.time() - t1)
+
+
+    #return content
 
 # 从数据库中获取link
 def get_directory_link_list_from_db():
@@ -128,7 +168,6 @@ def get_article_content(html):
         content = content.replace(r'<br/>\n<br/>\r\n', '\n')
         info = Article_content()
         info.content = process_html(content)
-        print(info.content)
         return info
 
     except:
@@ -159,15 +198,17 @@ def dowork():
     article_directory_link_list = get_directory_link_list_from_db()
     total_num = len(article_directory_link_list)
     print('需要下载章节数:', total_num)
-    if article_directory_link_list:
-        for index,item in enumerate(article_directory_link_list):
-            content = get_content_html(item)
-            info = get_article_content(content)
-            if info:
-                print('已经下载第', index)
-                # interval = random.uniform(1, 3)
-                # time.sleep(interval)
-                save_article_content_data(info, item)
+    content = get_content_html(article_directory_link_list)
+    #info = get_article_content(content)
+    # if info:
+    #     pass
+    #     #print('已经下载第', index)
+    #     # interval = random.uniform(1, 3)
+    #     # time.sleep(interval)
+    #     #save_article_content_data(info, item)
+    # #if article_directory_link_list:
+    #     #for index,item in enumerate(article_directory_link_list):
+
 
 
 if __name__ == '__main__':
