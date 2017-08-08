@@ -111,7 +111,7 @@ def get_content_html(urls):
     number = 0
     th = []
     # 最大的并发数量
-    maxthreads = 40
+    maxthreads = 10
 
     for url in urls:
         url = base_url + url
@@ -125,7 +125,7 @@ def get_content_html(urls):
             th = []
     [i.join() for i in th]
 
-    print(time.time() - t1)
+    #print(time.time() - t1)
 
 
     #return content
@@ -138,6 +138,21 @@ def get_directory_link_list_from_db():
 
     sql = 'select article_directory_link from c_article_detail where content is NULL'
     cursor.execute(sql)
+    values = cursor.fetchall()
+
+    article_directory_link_list = []
+
+    for item in values:
+        article_directory_link_list.append(item[0])
+
+    return article_directory_link_list
+
+def get_directory_link_from_db(id):
+    conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
+    cursor = conn.cursor()
+
+    sql = 'select article_directory_link from c_article_detail where content is NULL and article_id = %s'
+    cursor.execute(sql, [id])
     values = cursor.fetchall()
 
     article_directory_link_list = []
@@ -195,6 +210,8 @@ def save_article_content_data(info, link):
 
 
 def dowork():
+    # 10_10155 16_16960
+    #article_directory_link_list = get_directory_link_from_db('16_16858')
     article_directory_link_list = get_directory_link_list_from_db()
     total_num = len(article_directory_link_list)
     print('需要下载章节数:', total_num)

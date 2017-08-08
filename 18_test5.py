@@ -124,7 +124,7 @@ def get_html(urls):
     number = 0
     th = []
     # 最大的并发数量
-    maxthreads = 5
+    maxthreads = 10
 
     for url in urls:
         number += 1

@@ -102,7 +102,6 @@ def get_html(url):
 
 
     t = ''
-    print('get_html')
     print('main =', mainURL)
     try:
         print('键入')
@@ -117,7 +116,6 @@ def get_html(url):
         get_html(mainURL)
 
 
-    print('t ======', t)
     if t:
         r = BeautifulSoup(t, 'html.parser')
         content = str(r)
@@ -143,7 +141,7 @@ def get_article_directory(html):
     article_directory_list_href_reg = r'<dd>(.*?)</dd>'
     article_directory_list_reg = r'<a href="(.*?)">(.*?)</a>'
 
-    article_id_reg = r'<meta content="http://www.biquge.com.tw/(.*?)/" property="og:url"/'
+    article_id_reg = r'<meta content="http://www.biquzi.com/(.*?)/" property="og:url"/'
 
     title_result = re.search(title_reg, article_directory_nav_result)
     last_update_date_result = re.search(last_update_date_reg, article_directory_nav_result)
@@ -254,10 +252,7 @@ def dowork():
         global mainURL
         mainURL = link
 
-
-
         html = get_html(link)
-        print('html = ', html)
         if html:
             infos = get_article_directory(html)
             save_article_detail(infos)
