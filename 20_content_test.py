@@ -111,7 +111,7 @@ def get_content_html(urls):
     number = 0
     th = []
     # 最大的并发数量
-    maxthreads = 10
+    maxthreads = 4
 
     for url in urls:
         url = base_url + url

@@ -46,7 +46,7 @@ class Article(object):
 def get_article_line_from_db():
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = 'select link from c_article_list where status = 0 or status = 2'
+    sql = 'select link from c_article_list where title is NULL'
     cursor.execute(sql)
     values = cursor.fetchall()
     cursor.close()
@@ -73,7 +73,7 @@ def get_article_directory(html):
     article_author_reg = r'<meta content="(.*?)" property="og:novel:author"/>'
     article_abstract_reg = r'property="og:title"/>.*?<meta content="(.*?)" property="og:description"/>'
     article_image_link_reg = r'<meta content="(.*?)" property="og:image"/>'
-    article_id_reg = r'<meta content="http://www.biquge.com.tw/(.*?)/" property="og:url"/'
+    article_id_reg = r'<meta content="http://www.biquzi.com/(.*?)/" property="og:url"/'
 
     title_result = re.search(article_title_reg, html)
     author_result = re.search(article_author_reg, html)

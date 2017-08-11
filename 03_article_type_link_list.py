@@ -17,7 +17,7 @@ base_url = 'http://www.biquge.com.tw'
 
 
 class Type_article(object):
-    __slots__ = ('link', 'article_type', 'status')
+    __slots__ = ('link', 'article_type', 'status', 'article_id')
 
 
 def current_file_dir():
@@ -76,6 +76,9 @@ def get_type_article_list(html, type):
 
         info = Type_article()
         info.link = item_result.group(1)
+
+        info.article_id = info.link[22: len(info.link) - 1]
+
         info.status = 0
         if type == 'xuanhuan':
             type = '玄幻'
@@ -100,11 +103,11 @@ def get_type_article_list(html, type):
 
 
 # 检查是否存在这个小说链接
-def check_id_from_db(link):
+def check_id_from_db(article_id):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
-    sql = '''select status from c_article_list where link = %s'''
-    cursor.execute(sql, [link])
+    sql = '''select status from c_article_list where article_id = %s'''
+    cursor.execute(sql, [article_id])
     values = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -120,11 +123,11 @@ def save_article_link_to_db(info):
     conn = mysql.connector.connect(host=_host, port=_port, user=_user, password=_password, database=_database)
     cursor = conn.cursor()
 
-    sql = '''insert into c_article_list(link, article_type, status)
-                  values (%s, %s, %s)'''
+    sql = '''insert into c_article_list(link, article_type, status, article_id)
+                  values (%s, %s, %s, %s)'''
 
     cursor.execute(sql,
-                   [info.link, info.article_type, info.status])
+                   [info.link, info.article_type, info.status, info.article_id])
 
     conn.commit()
     cursor.close()
@@ -140,7 +143,7 @@ def do_work():
         if content:
             article_type_list = get_type_article_list(content, type)
             for info in article_type_list:
-                status = check_id_from_db(info.link)
+                status = check_id_from_db(info.article_id)
                 if status :
                     #print(type)
                     print('已经存在的link:', info.link)
