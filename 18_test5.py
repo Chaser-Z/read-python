@@ -196,6 +196,7 @@ def get_article_directory(html):
             chapter_list_href_result = new_chapter_list_href_result
     else:
         chapter_list_href_result = article_directory_list_href_result
+        new_chapter_list_href_result = article_directory_list_href_result
 
 
 
